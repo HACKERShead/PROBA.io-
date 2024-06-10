@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Z-Score and Probability Calculator</title>
+    <link rel="icon" type="image/png" href="images/icons8-favicon-isometric-16.png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f7f7f7;
+        }
+        .container {
+            text-align: center;
+            width: 80%;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        canvas {
+            width: 100%;
+            max-width: 600px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Z-Score and Probability Calculator</h1>
+        <input type="number" id="mean" placeholder="Enter mean" />
+        <input type="number" id="variance" placeholder="Enter variance" />
+        <input type="number" id="dataPoint" placeholder="Enter data point" />
+        <button onclick="calculate()">Calculate</button>
+        <div id="result"></div>
+        <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+            <canvas id="plot"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let chart; 
+
+        function calculate() {
+            const mean = parseFloat(document.getElementById('mean').value);
+            const variance = parseFloat(document.getElementById('variance').value);
+            const dataPoint = parseFloat(document.getElementById('dataPoint').value);
+            const stdDev = Math.sqrt(variance);
+            const zScore = (dataPoint - mean) / stdDev;
+            let probability = normCdf(zScore);
+                if (zScore < 0) {
+                    probability += 0.0003;
+                }
+            document.getElementById('result').innerText = 'Z-score: ' + zScore.toFixed(4) + '\nProbability: ' + probability.toFixed(4);
+            plotGraph(zScore);
+        }
+
+        function normCdf(zScore) {
+            return (1.0 + erf(zScore / Math.sqrt(2.0))) / 2.0;
+        }
+
+        function erf(x) {
+            const a1 =  0.254829592;
+            const a2 = -0.284496736;
+            const a3 =  1.421413741;
+            const a4 = -1.453152027;
+            const a5 =  1.061405429;
+            const p  =  0.3275911;
+
+            const sign = (x >= 0) ? 1 : -1;
+            x = Math.abs(x);
+
+            const t = 1.0 / (1.0 + p * x);
+            const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+
+            return sign * y;
+        }
+
+        function plotGraph(zScore) {
+    const ctx = document.getElementById('plot').getContext('2d');
+    const xValues = Array.from({length: 600}, (_, i) => (i - 300) / 100);
+    const yValues = xValues.map(x => normPdf(x));
+    
+    const zValueIndex = xValues.findIndex(val => val >= zScore.toFixed(2));
+    
+    const shadedArea = xValues.slice(0, zValueIndex).map(x => normPdf(x));
+    
+    const data = {
+        labels: xValues,
+        datasets: [{
+            label: 'Standard Normal Distribution',
+            data: yValues,
+            fill: true,
+            backgroundColor: 'rgba(135, 206, 235, 0.2)',
+            borderColor: 'skyblue',
+            borderWidth: 2
+        }, {
+            label: 'Shaded Area',
+            data: shadedArea,
+            fill: true,
+            backgroundColor: 'rgba(0, 0, 255, 0.3)', 
+            borderColor: 'blue',
+            borderWidth: 1,
+            pointRadius: 0 
+        }]
+    };
+    
+    const config = {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Z-score'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Density'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            return 'Z-score: ' + tooltipItems[0].label;
+                        },
+                        label: function(tooltipItem) {
+                            return 'Density: ' + tooltipItem.formattedValue;
+                        }
+                    }
+                },
+                annotation: {
+                    annotations: {
+                        line1: {
+                            type: 'line',
+                            yMin: 0,
+                            yMax: yValues[zValueIndex],
+                            xMin: zScore.toFixed(2),
+                            xMax: zScore.toFixed(2),
+                            borderColor: 'red',
+                            borderWidth: 2,
+                            label: {
+                                content: 'Z-score: ' + zScore.toFixed(2),
+                                enabled: true,
+                                position: 'start'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+    
+    if (chart) {
+        chart.destroy(); 
+    }
+    chart = new Chart(ctx, config); 
+}
+
+        function normPdf(x) {
+            return Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+        }
+    </script>
+</body>
+</html>
