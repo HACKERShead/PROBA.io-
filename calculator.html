@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Z-Score and Probability Calculator</title>
     <link rel="icon" type="image/png" href="images/icons8-favicon-isometric-16.png">
     <style>
@@ -12,25 +13,33 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             background-color: #f7f7f7;
         }
         .container {
             text-align: center;
-            width: 80%;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
         }
         input, button {
             margin: 10px;
             padding: 10px;
+            width: calc(100% - 22px); /* Adjust input width */
             border: 1px solid #ddd;
             border-radius: 5px;
         }
         #result {
             margin-top: 20px;
         }
+        .chart-container {
+            position: relative;
+            height: 40vh;
+            width: 100%;
+        }
         canvas {
             width: 100%;
-            max-width: 600px;
+            height: 100%;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
